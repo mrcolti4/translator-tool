@@ -20,7 +20,9 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->string('poster')->nullable();
             $table->string('release_year');
-            $table->string('language');
+            $table->string('original_language');
+            $table->string('target_language');
+            
             $table->timestamps();
         });
     }
