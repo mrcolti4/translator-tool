@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: 'mongodb/mongodb-atlas-local:latest'
+    image: 'mongo:7.0'
     environment:
       - 'MONGODB_INITDB_ROOT_USERNAME=${MONGODB_USERNAME:-}'
       - 'MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-}'
