@@ -16,15 +16,20 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:7.0
+        image: 'mongo:7.0'
+        env:
+          MONGODB_INITDB_ROOT_USERNAME: ${{ vars.MONGODB_USERNAME || '' }}
+          MONGODB_INITDB_ROOT_PASSWORD: ${{ secrets.MONGODB_PASSWORD || '' }}
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --replSet rs0 --bind_ip_all --port 27017
+          --health-cmd "echo \"try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}) }\" | mongosh --port 27017 --quiet"
+          --health-interval 5s
+          --health-timeout 30s
+          --health-start-period 0s
+          --health-retries 30
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,12 +69,25 @@ jobs:
           echo "DB_HOST=127.0.0.1" >> .env
           echo "DB_PORT=27017" >> .env
           echo "DB_DATABASE=testing" >> .env
-      - name: Wait for MongoDB
+          echo "MONGODB_URI=mongodb://127.0.0.1:27017/testing?replicaSet=rs0" >> .env
+
+      - name: Wait for MongoDB Replica Set
         run: |
-          until mongosh --host 127.0.0.1:27017 --eval "db.runCommand('ping').ok" --quiet; do
-            echo "Waiting for MongoDB..."
+          echo "Waiting for MongoDB replica set to initialize..."
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            if mongosh --host 127.0.0.1:27017 --eval "rs.status().ok" --quiet 2>/dev/null | grep -q "1"; then
+              echo "MongoDB replica set is ready!"
+              break
+            fi
+            echo "Still waiting for replica set... ($timeout seconds remaining)"
             sleep 2
+            timeout=$((timeout-2))
           done
+          if [ $timeout -le 0 ]; then
+            echo "Timeout waiting for MongoDB replica set"
+            exit 1
+          fi
 
       - name: Tests
         run: ./vendor/bin/phpunit
