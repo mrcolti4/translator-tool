@@ -14,6 +14,17 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: 'mongo:7.0'
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet || mongo --eval 'db.runCommand(\"ping\").ok' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +35,7 @@ jobs:
           php-version: 8.4
           tools: composer:v2
           coverage: xdebug
+          extensions: mongodb
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -40,11 +52,74 @@ jobs:
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      # Install MongoDB tools
+      - name: Install MongoDB Tools
+        run: |
+          wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+          sudo apt-get update
+          sudo apt-get install -y mongodb-mongosh
+
       - name: Copy Environment File
         run: cp .env.example .env
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Configure MongoDB with Replica Set
+        run: |
+          echo "Stopping default MongoDB container..."
+          docker stop $(docker ps -q --filter "ancestor=mongo:7.0")
+          
+          echo "Starting MongoDB with replica set..."
+          docker run -d \
+            --name mongodb-rs \
+            -p 27017:27017 \
+            --network github_network_$(docker network ls --format "{{.Name}}" | grep github_network | head -1 | cut -d'_' -f3) \
+            mongo:7.0 mongod --replSet rs0 --bind_ip_all --port 27017
+          
+          echo "Waiting for MongoDB to start..."
+          sleep 10
+
+      - name: Initialize MongoDB Replica Set
+        run: |
+          echo "Initializing replica set..."
+          mongosh --host 127.0.0.1:27017 --eval "
+            try {
+              rs.status();
+              console.log('Replica set already initialized');
+            } catch (err) {
+              console.log('Initializing replica set...');
+              rs.initiate({
+                _id: 'rs0',
+                members: [{
+                  _id: 0,
+                  host: '127.0.0.1:27017'
+                }]
+              });
+              console.log('Replica set initialized');
+            }
+          "
+          
+          echo "Waiting for replica set to be ready..."
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            if mongosh --host 127.0.0.1:27017 --eval "rs.status().ok" --quiet 2>/dev/null | grep -q "1"; then
+              echo "MongoDB replica set is ready!"
+              break
+            fi
+            echo "Still waiting for replica set... ($timeout seconds remaining)"
+            sleep 2
+            timeout=$((timeout-2))
+          done
+
+      - name: Configure MongoDB
+        run: |
+          echo "DB_CONNECTION=mongodb" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=27017" >> .env
+          echo "DB_DATABASE=testing" >> .env
+          echo "MONGODB_URI=mongodb://127.0.0.1:27017/testing?replicaSet=rs0" >> .env
 
       - name: Tests
         run: ./vendor/bin/phpunit

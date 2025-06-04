@@ -1,23 +1,26 @@
 services:
   mongodb:
-    image: 'mongodb/mongodb-atlas-local:latest'
+    image: 'mongo:7.0'
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     environment:
       - 'MONGODB_INITDB_ROOT_USERNAME=${MONGODB_USERNAME:-}'
       - 'MONGODB_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-}'
     volumes:
       - 'sail-mongodb:/data/db'
+      - 'mongodb-config:/data/configdb'
     ports:
       - '${FORWARD_MONGODB_PORT:-27017}:27017'
     networks:
       - sail
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test:
-        - CMD
-        - mongosh
-        - 'mongodb://localhost:27017/admin'
-        - '--eval=db.runCommand({ping:1})'
-      retries: 3
-      timeout: 5s
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30
   app:
     build:
       context: .
@@ -30,6 +33,8 @@ services:
       - ./:/var/www:delegated
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     user: "1000:1000"
+    depends_on:
+      - mongodb
     networks:
       - sail
 
@@ -48,5 +53,6 @@ networks:
   sail:
     driver: bridge
 volumes:
+  mongodb-config:
   sail-mongodb:
     driver: local
