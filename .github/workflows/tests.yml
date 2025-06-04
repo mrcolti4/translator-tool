@@ -20,7 +20,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet || mongo --eval 'db.runCommand(\"ping\").ok' --quiet"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -65,10 +65,24 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
-      - name: Initialize MongoDB Replica Set
+      - name: Configure MongoDB with Replica Set
         run: |
+          echo "Stopping default MongoDB container..."
+          docker stop $(docker ps -q --filter "ancestor=mongo:7.0")
+          
+          echo "Starting MongoDB with replica set..."
+          docker run -d \
+            --name mongodb-rs \
+            -p 27017:27017 \
+            --network github_network_$(docker network ls --format "{{.Name}}" | grep github_network | head -1 | cut -d'_' -f3) \
+            mongo:7.0 mongod --replSet rs0 --bind_ip_all --port 27017
+          
           echo "Waiting for MongoDB to start..."
           sleep 10
+
+      # Initialize MongoDB replica set
+      - name: Initialize MongoDB Replica Set
+        run: |
           echo "Initializing replica set..."
           mongosh --host 127.0.0.1:27017 --eval "
             try {
