@@ -23,12 +23,12 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --replSet rs0 --bind_ip_all --port 27017
           --health-cmd "echo \"try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}) }\" | mongosh --port 27017 --quiet"
           --health-interval 5s
           --health-timeout 30s
           --health-start-period 0s
           --health-retries 30
+          mongo:7.0 --replSet rs0 --bind_ip_all --port 27017
     
     steps:
       - name: Checkout
