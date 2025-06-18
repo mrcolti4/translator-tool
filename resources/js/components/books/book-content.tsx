@@ -1,4 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ChapterInfo from "./chapter-info";
 
 interface Book {
     pages: number;
@@ -28,13 +29,7 @@ export default function BookContent({ book }: { book: Book }) {
             </CardHeader>
             <CardContent>
                 <p className="mb-2">Chapter structure</p>
-                <div className="bg-white rounded-lg p-3 text-black flex items-center justify-between">
-                    <div>
-                        <h3>Chapter 1: The Beginning</h3>
-                        <CardDescription>Pages 1-15</CardDescription>
-                    </div>
-                    <p className="font-black">5240 words</p>
-                </div>
+                <ChapterInfo chapter={{ title: "Chapter 1: The Beginning", pageStart: 1, pageEnd: 15, words: 5240 }} />
             </CardContent>
         </Card>
     );

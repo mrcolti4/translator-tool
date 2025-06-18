@@ -4,14 +4,32 @@ import { Form, FormControl, FormField, FormLabel, FormSubmit } from "@radix-ui/r
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@headlessui/react";
+import { useForm } from "@inertiajs/react";
 
 interface Props {
-    file: File;
-    setData: Function
+    book: File;
     setStep: Function
 }
 
-export default function SelectedBook({ file, setData, setStep }: Props) {
+type FormValues = {
+    title: string;
+    author: string;
+    originalLanguage: string;
+    targetLanguage: string;
+    genre: string;
+    description: string | null;
+}
+
+export default function SelectedBook({ book, setStep }: Props) {
+
+    const { data, setData } = useForm<FormValues>({
+        title: '',
+        author: '',
+        originalLanguage: '',
+        targetLanguage: '',
+        genre: '',
+        description: '',
+    });
     return (
         <div className="space-y-6">
             <Card>
