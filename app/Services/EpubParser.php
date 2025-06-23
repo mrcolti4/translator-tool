@@ -8,15 +8,22 @@ use lywzx\epub\EpubParser as EParser;
 final class EpubParser
 {
     public function __construct(
+        public HTMLDocumentParserService $htmlParser,
     ) {}
 
     public function parse(UploadedFile $file)
     {
         $parser = new EParser($file->path());
         $pdf = $parser->parse();
-        $toc = $parser->getTOC();
-        $id = $parser->getSpine()[9];
+        $spine = $parser->getSpine();
 
-        dd($parser->getChapterRaw($id));
+
+        $chapters = array_map(function($item) use ($parser) {
+            $content = $parser->getChapter($item);
+            $chapter = $this->htmlParser->parseChapter($content);
+
+            return $chapter;
+        }, $spine);
+        dd($chapters);
     }
 }
