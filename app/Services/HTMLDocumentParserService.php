@@ -12,7 +12,7 @@ final class HTMLDocumentParserService
     public function __construct(
     ) {}
 
-    public function parseChapter(string $htmlContent)
+    public function parseChapter(string $htmlContent): ParsedChapter
     {
         $htmlContent = trim($htmlContent);
         if ('' === $htmlContent) {
@@ -31,11 +31,11 @@ final class HTMLDocumentParserService
         return new ParsedChapter(
             images: $images,
             wordsCount: strlen(trim($textContent)),
-            content: $textContent,
+            content: trim($textContent),
         );
     }
 
-    private function extractImages(HTMLDocument $chapterDom)
+    private function extractImages(HTMLDocument $chapterDom): array
     {
         $allImagesInChapter = $chapterDom->getElementsByTagName('img');
 
@@ -49,6 +49,10 @@ final class HTMLDocumentParserService
             $attrs = [];
 
             foreach($image->attributes->getIterator() as $key => $value) {
+                if ('src' === $key && true === str_starts_with($value->textContent, '/')) {
+                    $attrs[$key] = substr($value->textContent, 1);
+                    continue;
+                }
                 $attrs[$key] = $value->textContent;
             }
 
