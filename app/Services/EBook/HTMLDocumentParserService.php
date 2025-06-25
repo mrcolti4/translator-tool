@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\EBook;
 
-use App\DTO\Image;
-use App\DTO\ParsedChapter;
+use App\DTO\EBook\EBookImage;
+use App\DTO\EBook\ParsedChapter;
 use Dom\HTMLDocument;
 use Dom\HTMLElement;
 
@@ -24,6 +24,8 @@ final class HTMLDocumentParserService
         }
 
         $dom = HTMLDocument::createFromString($htmlContent);
+        $body = $dom->getElementsByTagName('body')->item(0);
+        $bodyContent = $dom->saveHtml($body);
         $textContent = $dom->body->textContent;
 
         $images = $this->extractImages($dom);
@@ -31,7 +33,8 @@ final class HTMLDocumentParserService
         return new ParsedChapter(
             images: $images,
             wordsCount: strlen(trim($textContent)),
-            content: trim($textContent),
+            htmlContent: $bodyContent,
+            chapterTitle: '',
         );
     }
 
@@ -56,7 +59,11 @@ final class HTMLDocumentParserService
                 $attrs[$key] = $value->textContent;
             }
 
-            $images[] = new Image(
+            if (false === array_key_exists('src', $attrs)) {
+                continue;
+            }
+
+            $images[] = new EBookImage(
                 src: $attrs['src'],
                 class: $attrs['class'],
             );

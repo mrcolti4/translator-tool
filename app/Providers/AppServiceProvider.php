@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use App\Services\EpubParser;
-use App\Services\HTMLDocumentParserService;
+use App\DataMappers\EBookInfoDataMapper;
+use App\Services\EBook\EpubParser;
+use App\Services\EBook\HTMLDocumentParserService;
 use App\Services\UploadImageService;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
             return new EpubParser(
                 $app->make(HTMLDocumentParserService::class),
                 $app->make(UploadImageService::class),
+                $app->make(EBookInfoDataMapper::class),
             );
         });
     }

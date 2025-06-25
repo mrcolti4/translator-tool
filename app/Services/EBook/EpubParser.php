@@ -1,7 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\EBook;
 
+use App\DataMappers\EBookInfoDataMapper;
+use App\DTO\EBook\EBookInfo;
+use App\DTO\EBook\ParsedEpub;
+use App\Services\UploadImageService;
 use Illuminate\Http\UploadedFile;
 use lywzx\epub\EpubParser as EParser;
 
@@ -13,13 +17,16 @@ final class EpubParser
     public function __construct(
         public HTMLDocumentParserService $htmlParser,
         public UploadImageService $imageService,
+        public EBookInfoDataMapper $dataMapper,
     ) {}
 
-    public function parse(UploadedFile $file): array
+    public function parse(UploadedFile $file): ParsedEpub
     {
         $parser = new EParser($file->path());
         $pdf = $parser->parse();
         $spine = $parser->getSpine();
+// dd($parser->getTOC());
+        $info = $this->dataMapper->mapToEBookInfo($parser->getDcItem());
 
         $chapters = array_map(function($item) use ($parser) {
             $content = $parser->getChapter($item);
@@ -28,7 +35,11 @@ final class EpubParser
 
             return $chapter;
         }, $spine);
-        dd($chapters);
+
+        return new ParsedEpub(
+            info: $info,
+            chapters: $chapters,
+        );
     }
 
     private function getImages(EParser $parser, array $imagesInChapter)

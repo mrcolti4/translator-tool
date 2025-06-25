@@ -19,10 +19,10 @@ final class UploadImageService
     {
         $image = 'data:image/jpeg;base64,' . base64_encode($imageData);
 
-        $this->api->upload($image, [
-            'public_id' => 'test',
-            'resource_type' => 'image',
-        ]);
-
+        // $response = $this->api->upload($image, [
+        //     'public_id' => 'test',
+        //     'resource_type' => 'image',
+        // ]);
+        // dd($response->getArrayCopy());
     }
 }

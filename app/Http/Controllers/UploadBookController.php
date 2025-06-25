@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ExtractBookRequest;
-use App\Services\EpubParser;
+use App\Services\EBook\EpubParser;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,6 +20,10 @@ class UploadBookController extends Controller
 
     public function upload(Request $request)
     {
-        $this->parser->parse($request->file('file'));
+        $book = $this->parser->parse($request->file('file'));
+
+        return Inertia::render('app/book/create', [
+            'book' => $book,
+        ]);
     }
 }

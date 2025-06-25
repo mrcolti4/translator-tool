@@ -1,8 +1,8 @@
 <?php
 
-namespace App\DTO;
+namespace App\DTO\EBook;
 
-final class Image
+final class EBookImage
 {
     public function __construct(
         public string $src,

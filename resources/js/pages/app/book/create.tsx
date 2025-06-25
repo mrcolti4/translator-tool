@@ -9,6 +9,7 @@ type step = "content" | "metadata";
 
 export default function Create({ book }) {
     const [step, setStep] = useState<step>("content");
+    console.log(book);
 
     return (
         <AppLayout>
