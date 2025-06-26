@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DataMappers;
+namespace App\DataMappers\EBook;
 
 use App\DTO\EBook\EBookInfo;
 

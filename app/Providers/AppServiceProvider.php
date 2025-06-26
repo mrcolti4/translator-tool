@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\DataMappers\EBookInfoDataMapper;
+use App\DataMappers\EBook\EBookInfoDataMapper;
 use App\Services\EBook\EpubParser;
 use App\Services\EBook\HTMLDocumentParserService;
 use App\Services\UploadImageService;

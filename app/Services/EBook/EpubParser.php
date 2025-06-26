@@ -2,7 +2,7 @@
 
 namespace App\Services\EBook;
 
-use App\DataMappers\EBookInfoDataMapper;
+use App\DataMappers\EBook\EBookInfoDataMapper;
 use App\DTO\EBook\EBookInfo;
 use App\DTO\EBook\ParsedEpub;
 use App\Services\UploadImageService;
@@ -25,14 +25,13 @@ final class EpubParser
         $parser = new EParser($file->path());
         $pdf = $parser->parse();
         $spine = $parser->getSpine();
-// dd($parser->getTOC());
+
         $info = $this->dataMapper->mapToEBookInfo($parser->getDcItem());
 
         $chapters = array_map(function($item) use ($parser) {
             $content = $parser->getChapter($item);
             $chapter = $this->htmlParser->parseChapter($content);
             $this->getImages($parser, $chapter->images);
-
             return $chapter;
         }, $spine);
 
@@ -59,9 +58,10 @@ final class EpubParser
                 $imageId = array_find_key($allImagesInEpub, function(array $item) use($image) {
                     return $item['href'] === $image->src;
                 });
-                $image = $parser->getImage($imageId);
+                $imageBytes = $parser->getImage($imageId);
+                $image->size = round(strlen($imageBytes) / 1024, 2);
 
-                $this->imageService->uploadImage($image);
+                $this->imageService->uploadImage($imageBytes);
             }
         }
     }

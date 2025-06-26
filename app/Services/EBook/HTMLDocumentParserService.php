@@ -34,7 +34,6 @@ final class HTMLDocumentParserService
             images: $images,
             wordsCount: strlen(trim($textContent)),
             htmlContent: $bodyContent,
-            chapterTitle: '',
         );
     }
 
@@ -65,7 +64,8 @@ final class HTMLDocumentParserService
 
             $images[] = new EBookImage(
                 src: $attrs['src'],
-                class: $attrs['class'],
+                alt: $attrs['alt'] ?? '',
+                size: 0
             );
         }
 

@@ -8,6 +8,5 @@ final class ParsedChapter
         public array $images,
         public int $wordsCount,
         public string $htmlContent,
-        public string $chapterTitle,
     ) {}
 }

@@ -6,6 +6,7 @@ final class EBookImage
 {
     public function __construct(
         public string $src,
-        public string $class,
+        public string $alt,
+        public float $size,
     ) {}
 }
