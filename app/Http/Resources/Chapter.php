@@ -17,6 +17,7 @@ class Chapter extends JsonResource
         return [
             'images' => $this->resource->images,
             'wordsCount' => $this->resource->wordsCount,
+            'charCount' => $this->resource->charCount,
         ];
     }
 }

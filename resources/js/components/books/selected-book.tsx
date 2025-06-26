@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@headlessui/react";
 import { useForm } from "@inertiajs/react";
+import { Book as BookType } from "@/types/book";
 
 interface Props {
-    book: File;
+    book: BookType;
     setStep: Function
 }
 
@@ -40,8 +41,8 @@ export default function SelectedBook({ book, setStep }: Props) {
                     <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
                         <FileText className="h-8 w-8 text-blue-600" />
                         <div className="text-black">
-                            <p className="font-medium">{file.name}</p>
-                            <p className="text-sm text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p className="font-medium">{book.info.title}</p>
+                            {/* <p className="text-sm text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p> */}
                         </div>
                     </div>
                 </CardContent>
@@ -63,6 +64,7 @@ export default function SelectedBook({ book, setStep }: Props) {
                                         placeholder="Enter book title"
                                         className="bg-white text-black"
                                         type="text"
+                                        value={book.info.title ?? ''}
                                         onInput={(e) => setData("title", e.currentTarget.value)}
                                     />
                                 </FormControl>
@@ -115,6 +117,7 @@ export default function SelectedBook({ book, setStep }: Props) {
                                         placeholder="Brief description of the book (optional)"
                                         rows={3}
                                         className="bg-white text-black"
+                                        value={book.info.description}
                                         onInput={(e) => setData("description", e.currentTarget.value)}
                                     ></Textarea>
                                 </FormControl>

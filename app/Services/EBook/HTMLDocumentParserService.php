@@ -32,7 +32,8 @@ final class HTMLDocumentParserService
 
         return new ParsedChapter(
             images: $images,
-            wordsCount: strlen(trim($textContent)),
+            charCount: strlen(trim($textContent)),
+            wordsCount: count(preg_split('/\s+/', trim($textContent))),
             htmlContent: $bodyContent,
         );
     }
